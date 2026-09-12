@@ -1,0 +1,47 @@
+/* Polices embarquées (hors ligne) — sous-ensemble latin, fichiers variables. */
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 200 800;
+  font-stretch: 100%;
+  font-display: block;
+  src: url('../assets/fonts/BricolageGrotesque-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 100 1000;
+  font-display: block;
+  src: url('../assets/fonts/DMSans-latin.woff2') format('woff2');
+}
+
+:root {
+  /* Couleurs */
+  --bg: #f7f3ee;
+  --card: #ffffff;
+  --border: #e7dfd6;
+  --panel: #ebe4dc;
+  --text: #2b2622;
+  --muted: #7a716a;
+  --accent: #b8532e;
+  --accent-dark: #8f3f21;
+  --chip: #cfc4b8;
+  --danger: #9b3b1f;
+
+  /* Typo */
+  --font-display: 'Bricolage Grotesque', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-ui: 'DM Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* Rayons */
+  --r-card: 14px;
+  --r-panel: 18px;
+  --r-tile: 8px;
+  --r-pill: 999px;
+
+  /* Chrome */
+  --titlebar-h: 52px;
+  --right-col: 440px;
+
+  color-scheme: light;
+}

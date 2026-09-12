@@ -1,0 +1,36 @@
+appId: fr.elao.cadre
+productName: Cadre
+directories:
+  buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!docs/*'
+  - '!tests/*'
+  - '!electron.vite.config.{js,ts,mjs,cjs}'
+  - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json,vitest.config.ts}'
+asarUnpack:
+  - resources/**
+  - '**/node_modules/sharp/**'
+  - '**/node_modules/@img/**'
+mac:
+  category: public.app-category.photography
+  target:
+    - target: dmg
+      arch:
+        - arm64
+    - target: zip
+      arch:
+        - arm64
+  extendInfo:
+    - NSDocumentsFolderUsageDescription: Cadre a besoin d'accéder à vos documents pour y lire et écrire vos photos.
+    - NSDownloadsFolderUsageDescription: Cadre a besoin d'accéder à vos téléchargements pour y lire et écrire vos photos.
+  # v1 non signée : première ouverture par clic droit → Ouvrir.
+  hardenedRuntime: false
+  identity: null
+  notarize: false
+dmg:
+  artifactName: ${name}-${version}.${ext}
+npmRebuild: false
