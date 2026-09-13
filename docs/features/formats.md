@@ -6,7 +6,7 @@ Produire des fichiers au ratio et à la taille qu'Instagram affiche sans les rec
 ## Ce que fait Instagram (vérifié septembre 2026)
 - Le fil affiche les photos à **1080 px de large maximum** ; tout fichier plus large est réduit par Instagram.
 - Ratios acceptés dans le fil : de 1,91:1 (paysage) à 4:5 (portrait). Le **3:4** est accepté nativement depuis mai 2025 et correspond à la **grille du profil**, qui recadre les aperçus en 3:4.
-- Formats de fichier : JPEG ou PNG, moins de 8 Mo.
+- Formats de fichier : JPEG ou PNG, moins de 8 Mo. L'app n'impose pas cette limite : elle exporte en qualité 100 (voir `features/export.md`).
 - Sources : guides 2026 de Buffer, Influencer Marketing Hub, Hootsuite et SocialBee. Meta ne publie pas de page officielle avec ces chiffres.
 
 ## Règle de l'app : le petit côté fait toujours 1080 px

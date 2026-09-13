@@ -83,9 +83,7 @@ export const DEFAULT_PREFS: Prefs = {
   stripExif: true
 }
 
-/** Qualité JPEG de départ ; la boucle d'export descend si le fichier dépasse MAX_FILE_BYTES. */
-export const DEFAULT_JPEG_QUALITY = 92
-/** Limite Instagram pour un fichier image. */
-export const MAX_FILE_BYTES = 8 * 1024 * 1024
+/** Qualité JPEG de l'export : maximale, sans plafond de poids sur le fichier produit. */
+export const JPEG_QUALITY = 100
 
 export const ACCEPTED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'heic', 'heif', 'tif', 'tiff', 'webp']
