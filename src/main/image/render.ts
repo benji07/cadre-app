@@ -2,14 +2,10 @@ import sharp from 'sharp'
 import type { Metadata } from 'sharp'
 import { computeLayout, hexToRgb } from '../../shared/geometry'
 import type { Size } from '../../shared/geometry'
-import { DEFAULT_JPEG_QUALITY, MAX_FILE_BYTES } from '../../shared/types'
+import { JPEG_QUALITY } from '../../shared/types'
 import type { ExportJob, ExportOptions } from '../../shared/types'
 import { loadDecodable } from './decode'
 import { whitelistFromExifBuffer } from './exif'
-
-/** Qualité minimale acceptée par la boucle de ré-encodage. */
-const QUALITY_FLOOR = 60
-const QUALITY_STEP = 4
 
 /** Dimensions réelles après application de l'orientation EXIF. */
 export function rotatedSize(meta: Metadata): Size {
@@ -75,7 +71,7 @@ export async function renderInput(
     .raw()
     .toBuffer({ resolveWithObject: true })
 
-  // Le cadre composé est matérialisé une fois : la boucle de qualité ne refait que l'encodage.
+  // Le cadre composé est matérialisé en brut avant l'encodage final.
   const frame = await sharp({
     create: {
       width: layout.frame.width,
@@ -99,17 +95,8 @@ export async function renderInput(
   // Sinon, liste blanche uniquement : plus de GPS, orientation normalisée à 1.
   const exif = options.stripExif ? undefined : whitelistFromExifBuffer(meta.exif)
 
-  const encode = (quality: number): Promise<Buffer> => {
-    let out = sharp(frame.data, { raw: frame.info }).withIccProfile('srgb')
-    if (exif) out = out.withExif(exif)
-    return out.jpeg({ quality, chromaSubsampling: '4:4:4', mozjpeg: true }).toBuffer()
-  }
-
-  let quality = DEFAULT_JPEG_QUALITY
-  let buffer = await encode(quality)
-  while (buffer.length > MAX_FILE_BYTES && quality > QUALITY_FLOOR) {
-    quality = Math.max(QUALITY_FLOOR, quality - QUALITY_STEP)
-    buffer = await encode(quality)
-  }
-  return buffer
+  let out = sharp(frame.data, { raw: frame.info }).withIccProfile('srgb')
+  if (exif) out = out.withExif(exif)
+  // Qualité maximale assumée : aucun ré-encodage dégressif, le poids du fichier est libre.
+  return out.jpeg({ quality: JPEG_QUALITY, chromaSubsampling: '4:4:4', mozjpeg: true }).toBuffer()
 }

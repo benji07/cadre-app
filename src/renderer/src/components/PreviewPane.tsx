@@ -10,7 +10,7 @@ import {
   type RefObject
 } from 'react'
 import type { Photo } from '@shared/types'
-import { DEFAULT_JPEG_QUALITY } from '@shared/types'
+import { JPEG_QUALITY } from '@shared/types'
 import { computeLayout, fitInside, rgbToHex } from '@shared/geometry'
 import type { Size } from '@shared/geometry'
 import { useEffectiveSettings, useSelectedPhoto, useStore } from '@renderer/store'
@@ -179,7 +179,7 @@ export default function PreviewPane(): JSX.Element {
       </div>
       <div className="preview__meta">
         <span>{photo ? `${photo.name} · ${dims(photo.width, photo.height)}` : 'Aucune photo'}</span>
-        <span>{`Sortie ${dims(frame.width, frame.height)} · JPEG ${DEFAULT_JPEG_QUALITY} · sRGB`}</span>
+        <span>{`Sortie ${dims(frame.width, frame.height)} · JPEG ${JPEG_QUALITY} · sRGB`}</span>
       </div>
     </>
   )

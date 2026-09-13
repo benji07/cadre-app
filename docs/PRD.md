@@ -47,7 +47,7 @@ Par défaut les réglages s'appliquent à tout le lot. Une bascule « Toutes les
 | F6 | Choisir le cadrage : photo entière (contenir) ou remplir le cadre (couvrir, recadrage centré) | `features/bordure.md` |
 | F7 | Appliquer les réglages à tout le lot ou à une seule photo, avec retour aux réglages du lot | `features/reglages-par-photo.md` |
 | F8 | Afficher un aperçu fidèle au rendu final, mis à jour en temps réel | `features/bordure.md` |
-| F9 | Exporter tout le lot en JPEG sRGB, qualité 92, petit côté 1080 ou 2160 px, fichier < 8 Mo | `features/export.md` |
+| F9 | Exporter tout le lot en JPEG sRGB, qualité 100, petit côté 1080 ou 2160 px, sans plafond de poids | `features/export.md` |
 | F10 | Supprimer les métadonnées EXIF par défaut (option désactivable) | `features/export.md` |
 | F11 | Afficher la progression de l'export et ouvrir le dossier à la fin | `features/export.md` |
 | F12 | Mémoriser le dossier d'export et les derniers réglages entre deux lancements | `features/export.md` |
