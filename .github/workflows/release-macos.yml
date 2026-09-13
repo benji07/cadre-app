@@ -1,0 +1,65 @@
+name: Build macOS
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: build-macos-${{ github.event.release.tag_name || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    # Runner macOS standard (Apple Silicon, arm64) : gratuit sur un dépôt public.
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Le tag de la release fait foi : v1.2.3 -> version 1.2.3 dans l'app.
+      # `npm ci` tourne avant, pour que package.json reste aligné avec le lockfile.
+      - name: Aligner la version sur le tag
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          VERSION="${TAG#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)*$ ]]; then
+            echo "::error::Le tag '$TAG' n'est pas un numéro de version semver (attendu : v1.2.3 ou 1.2.3)."
+            exit 1
+          fi
+          npm pkg set version="$VERSION"
+          echo "Version de build : $VERSION"
+
+      - name: Build (dmg + zip arm64)
+        run: npm run build:mac
+
+      - name: Attacher les artefacts à la release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" dist/*.dmg dist/*.zip --clobber
+
+      # Sur un déclenchement manuel, rien n'est publié : les fichiers restent
+      # téléchargeables depuis la page du run, le temps de vérifier le build.
+      - name: Publier les artefacts du run
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cadre-macos-arm64
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error
