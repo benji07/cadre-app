@@ -42,6 +42,9 @@ jobs:
           npm pkg set version="$VERSION"
           echo "Version de build : $VERSION"
 
+      # `build:mac` passe `--publish never` : sans ça, electron-builder voit le
+      # tag git du checkout, déclenche une publication implicite et échoue faute
+      # de token. C'est l'étape suivante, et elle seule, qui publie.
       - name: Build (dmg + zip arm64)
         run: npm run build:mac
 
