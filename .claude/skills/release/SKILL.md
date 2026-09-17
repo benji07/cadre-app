@@ -121,18 +121,27 @@ changelog, et poserait le tag avant qu'on ait relu le commit.
 
 ## 6. Créer la release GitHub
 
-Le corps de la release est `CHANGELOG.md` en entier, toutes versions confondues —
-pas seulement la section du jour, et surtout pas un `--generate-notes`, qui
-recracherait la liste brute des commits :
+Les notes sont dérivées de `CHANGELOG.md`, jamais écrites à part, et surtout pas
+par `--generate-notes` qui recracherait la liste brute des commits.
+
+Le fichier est organisé version par version ; la page de release, elle, montre ce
+que fait et ce que corrige l'application. `changelog-to-notes.py` fait la
+traduction : il retire le titre du fichier, son chapeau, les en-têtes de version
+et les paragraphes de prose, et fusionne les listes de même type dans l'ordre
+Ajouté / Modifié / Corrigé / Supprimé.
 
 ```bash
-gh release create "v$VERSION" --title "v$VERSION" --notes-file CHANGELOG.md
+NOTES=$(mktemp)
+python3 .claude/skills/release/changelog-to-notes.py CHANGELOG.md > "$NOTES"
+cat "$NOTES"   # relire avant de publier
+gh release create "v$VERSION" --title "v$VERSION" --notes-file "$NOTES"
 ```
 
-Le fichier fait foi : la page de release et le dépôt disent exactement la même
-chose, sans texte à maintenir en double. (Limite GitHub : 125 000 caractères de
-corps de release. Loin devant, mais le jour où le changelog s'en approche, il
-faudra n'en publier que les dernières versions.)
+Le corps est donc cumulatif : il décrit l'application telle qu'elle est à cette
+version, pas seulement le delta. C'est voulu — quelqu'un qui arrive sur la page
+de release veut savoir ce qu'il télécharge. (Limite GitHub : 125 000 caractères.
+Loin devant, mais le jour où le changelog s'en approche, il faudra n'en passer
+que les dernières versions au script.)
 
 Sa publication déclenche le workflow `Build macOS`.
 
