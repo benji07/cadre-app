@@ -121,15 +121,18 @@ changelog, et poserait le tag avant qu'on ait relu le commit.
 
 ## 6. Créer la release GitHub
 
-Les notes de release sont l'entrée de changelog qu'on vient d'écrire — pas un
-`--generate-notes`, qui recracherait la liste brute des commits :
+Le corps de la release est `CHANGELOG.md` en entier, toutes versions confondues —
+pas seulement la section du jour, et surtout pas un `--generate-notes`, qui
+recracherait la liste brute des commits :
 
 ```bash
-NOTES=$(mktemp)
-awk "/^## \[$VERSION\]/{f=1;next} /^## \[/{f=0} f" CHANGELOG.md > "$NOTES"
-test -s "$NOTES" || echo "ERREUR : section $VERSION introuvable dans CHANGELOG.md"
-gh release create "v$VERSION" --title "v$VERSION" --notes-file "$NOTES"
+gh release create "v$VERSION" --title "v$VERSION" --notes-file CHANGELOG.md
 ```
+
+Le fichier fait foi : la page de release et le dépôt disent exactement la même
+chose, sans texte à maintenir en double. (Limite GitHub : 125 000 caractères de
+corps de release. Loin devant, mais le jour où le changelog s'en approche, il
+faudra n'en publier que les dernières versions.)
 
 Sa publication déclenche le workflow `Build macOS`.
 
