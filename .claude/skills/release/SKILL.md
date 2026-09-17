@@ -124,24 +124,29 @@ changelog, et poserait le tag avant qu'on ait relu le commit.
 Les notes sont dérivées de `CHANGELOG.md`, jamais écrites à part, et surtout pas
 par `--generate-notes` qui recracherait la liste brute des commits.
 
-Le fichier est organisé version par version ; la page de release, elle, montre ce
-que fait et ce que corrige l'application. `changelog-to-notes.py` fait la
-traduction : il retire le titre du fichier, son chapeau, les en-têtes de version
-et les paragraphes de prose, et fusionne les listes de même type dans l'ordre
-Ajouté / Modifié / Corrigé / Supprimé.
+Le fichier est organisé version par version, avec un titre, un chapeau et de la
+prose ; la page de release ne montre que les changements. `changelog-to-notes.py`
+fait la traduction — il ne garde que les listes, sous leurs intertitres :
 
 ```bash
 NOTES=$(mktemp)
-python3 .claude/skills/release/changelog-to-notes.py CHANGELOG.md > "$NOTES"
+python3 .claude/skills/release/changelog-to-notes.py CHANGELOG.md --version "$VERSION" > "$NOTES"
 cat "$NOTES"   # relire avant de publier
 gh release create "v$VERSION" --title "v$VERSION" --notes-file "$NOTES"
 ```
 
-Le corps est donc cumulatif : il décrit l'application telle qu'elle est à cette
-version, pas seulement le delta. C'est voulu — quelqu'un qui arrive sur la page
-de release veut savoir ce qu'il télécharge. (Limite GitHub : 125 000 caractères.
-Loin devant, mais le jour où le changelog s'en approche, il faudra n'en passer
-que les dernières versions au script.)
+**Une release ne décrit que sa propre version**, c'est-à-dire ce qui a changé
+depuis la précédente. Les versions antérieures ont leur propre page ; les répéter
+noierait le delta.
+
+L'option `--all` fusionne toutes les versions dans un seul corps. Elle ne sert
+que dans un cas : la ou les releases précédentes n'existent pas, et celle-ci doit
+donc décrire l'application entière. C'est ce qui a été fait pour la `v0.1.0`,
+publiée après suppression d'une `0.0.1` vide. Ne pas l'employer par défaut.
+
+Le script sort en erreur si la version est absente du changelog ou n'y liste
+aucun changement — dans ce cas, revenir à l'étape 4 plutôt que publier des notes
+vides.
 
 Sa publication déclenche le workflow `Build macOS`.
 

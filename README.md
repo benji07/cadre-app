@@ -85,7 +85,7 @@ git commit -am "Version $VERSION"
 git tag -a "v$VERSION" -m "Version $VERSION"
 git push --follow-tags origin main
 gh release create "v$VERSION" --title "v$VERSION" \
-  --notes-file <(python3 .claude/skills/release/changelog-to-notes.py CHANGELOG.md)
+  --notes-file <(python3 .claude/skills/release/changelog-to-notes.py CHANGELOG.md --version "$VERSION")
 ```
 
 La version vit dans `package.json` ; le tag n'en est que le reflet. Publier la

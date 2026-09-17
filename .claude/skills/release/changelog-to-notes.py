@@ -1,50 +1,97 @@
 #!/usr/bin/env python3
-"""Rend CHANGELOG.md en notes de release : uniquement les changements.
+"""Rend une section de CHANGELOG.md en notes de release.
 
-Le fichier est organisé version par version ; la page de release, elle, montre
-ce que fait et ce que corrige l'application. Le titre du fichier, son chapeau,
-les en-têtes de version et les paragraphes de prose sont donc retirés, et les
-listes de même type sont fusionnées dans un ordre stable.
+Le fichier est organisé version par version, avec un titre, un chapeau et des
+paragraphes de prose. Une page de release ne montre que les changements : ce
+script en extrait les listes, sans l'appareillage du fichier.
 
-Usage : changelog-to-notes.py [CHANGELOG.md]
+Par défaut, la version la plus récente seule — ce que la release publie
+normalement. `--all` fusionne toutes les versions, utile quand la release
+précédente n'existe pas et que celle-ci doit décrire l'application entière.
+
+Usage :
+  changelog-to-notes.py [CHANGELOG.md]
+  changelog-to-notes.py [CHANGELOG.md] --version 0.2.0
+  changelog-to-notes.py [CHANGELOG.md] --all
 """
 
+import argparse
 import re
 import sys
 
 ORDRE = ["Ajouté", "Modifié", "Corrigé", "Supprimé", "Sécurité", "Déprécié"]
 
 
-def rendre(texte: str) -> str:
-    sections: dict[str, list[str]] = {}
-    courante = None
+def decouper(texte):
+    """CHANGELOG.md -> [(version, {type: [puces]})], du plus récent au plus ancien."""
+    versions, sections, courante, version = [], {}, None, None
+
+    def clore():
+        if version is not None:
+            versions.append((version, sections))
 
     for ligne in texte.splitlines():
-        if titre := re.fullmatch(r"#{3,}\s+(.+?)\s*", ligne):
+        if entete := re.match(r"##\s+\[?([^\]\s]+)\]?", ligne):
+            clore()
+            version, sections, courante = entete.group(1), {}, None
+        elif titre := re.fullmatch(r"#{3,}\s+(.+?)\s*", ligne):
             courante = titre.group(1)
             sections.setdefault(courante, [])
-        elif re.match(r"#{1,2}\s", ligne):
-            # Titre du fichier ou en-tête de version : hors sujet ici.
-            courante = None
-        elif courante is None:
+        elif ligne.startswith("#") or courante is None:
             continue
         elif ligne.startswith("- "):
             sections[courante].append(ligne)
         elif ligne.startswith("  ") and ligne.strip() and sections[courante]:
-            # Continuation de la puce précédente.
-            sections[courante][-1] += "\n" + ligne
+            sections[courante][-1] += "\n" + ligne  # continuation de puce
 
-    connues = [t for t in ORDRE if sections.get(t)]
-    autres = [t for t in sections if sections[t] and t not in ORDRE]
+    clore()
+    return versions
 
-    blocs = [
-        "### " + titre + "\n" + "\n".join(sections[titre])
-        for titre in connues + autres
-    ]
-    return "\n\n".join(blocs) + "\n"
+
+def fusionner(versions):
+    fusion = {}
+    for _, sections in versions:
+        for titre, puces in sections.items():
+            fusion.setdefault(titre, []).extend(puces)
+    return fusion
+
+
+def rendre(sections):
+    titres = [t for t in ORDRE if sections.get(t)]
+    titres += [t for t in sections if sections[t] and t not in ORDRE]
+    return "\n\n".join("### " + t + "\n" + "\n".join(sections[t]) for t in titres) + "\n"
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("fichier", nargs="?", default="CHANGELOG.md")
+    p.add_argument("--version", help="version à extraire (défaut : la plus récente)")
+    p.add_argument("--all", action="store_true", help="fusionner toutes les versions")
+    args = p.parse_args()
+
+    with open(args.fichier, encoding="utf-8") as f:
+        versions = decouper(f.read())
+
+    if not versions:
+        sys.exit(f"{args.fichier} ne contient aucune version.")
+
+    if args.all:
+        sections = fusionner(versions)
+    elif args.version:
+        trouvees = [s for v, s in versions if v == args.version]
+        if not trouvees:
+            connues = ", ".join(v for v, _ in versions)
+            sys.exit(f"Version {args.version} absente de {args.fichier}. Présentes : {connues}")
+        sections = trouvees[0]
+    else:
+        sections = versions[0][1]
+
+    if not any(sections.values()):
+        cible = args.version or versions[0][0]
+        sys.exit(f"La version {cible} ne liste aucun changement dans {args.fichier}.")
+
+    sys.stdout.write(rendre(sections))
 
 
 if __name__ == "__main__":
-    chemin = sys.argv[1] if len(sys.argv) > 1 else "CHANGELOG.md"
-    with open(chemin, encoding="utf-8") as f:
-        sys.stdout.write(rendre(f.read()))
+    main()
