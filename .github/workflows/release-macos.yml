@@ -25,25 +25,29 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
-
-      # Le tag de la release fait foi : v1.2.3 -> version 1.2.3 dans l'app.
-      # `npm ci` tourne avant, pour que package.json reste aligné avec le lockfile.
-      - name: Aligner la version sur le tag
+      # Le tag et package.json sont posés ensemble par `npm version` (voir le
+      # README). On ne fait que le vérifier, avant le `npm ci` : une erreur de
+      # tag coûte quelques secondes au lieu d'un build complet.
+      - name: Vérifier que le tag correspond à la version du package.json
         if: github.event_name == 'release'
         env:
           TAG: ${{ github.event.release.tag_name }}
         run: |
           VERSION="${TAG#v}"
-          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)*$ ]]; then
-            echo "::error::Le tag '$TAG' n'est pas un numéro de version semver (attendu : v1.2.3 ou 1.2.3)."
+          PKG="$(node -p "require('./package.json').version")"
+          if [ "$VERSION" != "$PKG" ]; then
+            echo "::error::Le tag '$TAG' ne correspond pas à la version du package.json ($PKG). Posez le tag avec \`npm version\`."
             exit 1
           fi
-          npm pkg set version="$VERSION"
-          echo "Version de build : $VERSION"
+          echo "Version de build : $PKG"
 
+      - run: npm ci
+
+      # `--publish never` : sans lui, electron-builder voit le tag git et tente de
+      # publier lui-même, ce qui échoue faute de GH_TOKEN à cette étape. L'envoi
+      # vers la release est le travail de l'étape suivante, explicitement.
       - name: Build (dmg + zip arm64)
-        run: npm run build:mac
+        run: npm run build:mac -- --publish never
 
       - name: Attacher les artefacts à la release
         if: github.event_name == 'release'
