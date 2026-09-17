@@ -4,6 +4,17 @@ Les changements notables de Cadre, version par version.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/),
 versions selon [semver](https://semver.org/lang/fr/).
 
+## [0.1.0] — 2026-09-17
+
+L'application est inchangée depuis la 0.0.1 : c'est le même code. Cette version
+existe parce que la release 0.0.1 avait été publiée sans aucun fichier, son build
+ayant échoué au moment de les attacher. La 0.1.0 est donc la première version
+réellement téléchargeable.
+
+### Corrigé
+- Le dmg et le zip arm64 sont attachés à la release au lieu d'être construits
+  puis perdus.
+
 ## [0.0.1] — 2026-09-14
 
 Première version publiée.
