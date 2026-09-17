@@ -12,7 +12,7 @@ Application macOS pour préparer des photos avant publication sur Instagram : ch
 - **Cadrage** photo entière (la photo est contenue dans le cadre) ou remplir le cadre (recadrage centré).
 - **Réglages par photo** : par défaut tout le lot partage les mêmes réglages ; une bascule permet d'ajuster une photo à part, avec retour aux réglages du lot en un clic.
 - **Aperçu fidèle** : le canvas utilise exactement la même géométrie que le rendu final.
-- **Export** JPEG qualité 92, sous-échantillonnage 4:4:4, profil sRGB, fichier garanti sous 8 Mo. Métadonnées EXIF supprimées par défaut ; si conservées, seule une liste blanche est réécrite et le GPS disparaît toujours.
+- **Export** JPEG qualité 100, sous-échantillonnage 4:4:4, profil sRGB. Métadonnées EXIF supprimées par défaut ; si conservées, seule une liste blanche est réécrite et le GPS disparaît toujours.
 - **Mémoire** du dossier d'export et des derniers réglages entre deux lancements.
 
 ## Avant / après
@@ -68,25 +68,29 @@ Première ouverture d'une build non signée : clic droit sur l'app → Ouvrir.
 
 ## Publier une version
 
-Le numéro de version vit dans `package.json` ; le tag git n'en est que le reflet.
-`npm version` fait les deux d'un coup — il met à jour `package.json` et
-`package-lock.json`, commite, puis pose le tag correspondant :
+Le plus simple est le skill Claude Code `/release` ([.claude/skills/release](.claude/skills/release/SKILL.md)),
+qui déroule la chaîne complète : il lit les commits depuis le dernier tag, propose
+le numéro de version, rédige l'entrée de [CHANGELOG.md](CHANGELOG.md), pose le
+commit et le tag, crée la release GitHub et surveille le build jusqu'à ce que le
+dmg y soit attaché.
+
+À la main, la même chaîne :
 
 ```bash
-npm version patch   # 0.1.0 -> 0.1.1   (patch | minor | major, ou un numéro exact)
-git push --follow-tags
+npm run lint && npm run typecheck && npm test
+npm version minor --no-git-tag-version        # bump package.json + lock
+$EDITOR CHANGELOG.md                          # entrée de la nouvelle version
+VERSION=$(node -p "require('./package.json').version")
+git commit -am "Version $VERSION"
+git tag -a "v$VERSION" -m "Version $VERSION"
+git push --follow-tags origin main
+gh release create "v$VERSION" --title "v$VERSION" --notes-file <(awk "/^## \\[$VERSION\\]/{f=1;next} /^## \\[/{f=0} f" CHANGELOG.md)
 ```
 
-Il reste à créer la release GitHub sur ce tag :
-
-```bash
-gh release create "v$(node -p "require('./package.json').version")" --generate-notes
-```
-
-Sa publication déclenche le workflow [Build macOS](.github/workflows/release-macos.yml),
-qui construit le dmg et le zip arm64 puis les attache à la release. Le workflow
-refuse de construire si le tag et `package.json` divergent, donc passer par
-`npm version` n'est pas une politesse : c'est ce qui garde les deux d'accord.
+La version vit dans `package.json` ; le tag n'en est que le reflet. Publier la
+release déclenche le workflow [Build macOS](.github/workflows/release-macos.yml),
+qui construit le dmg et le zip arm64 puis les attache. Il refuse de construire si
+le tag et `package.json` divergent — d'où le soin à les poser ensemble.
 
 Pour vérifier un build sans rien publier, lancer le workflow à la main
 (`gh workflow run release-macos.yml`) : les fichiers sont déposés en artefacts du run.
