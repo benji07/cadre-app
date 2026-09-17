@@ -66,6 +66,31 @@ npm run build:mac  # produit dist/Cadre-<version>.dmg (arm64, non signé)
 
 Première ouverture d'une build non signée : clic droit sur l'app → Ouvrir.
 
+## Publier une version
+
+Le numéro de version vit dans `package.json` ; le tag git n'en est que le reflet.
+`npm version` fait les deux d'un coup — il met à jour `package.json` et
+`package-lock.json`, commite, puis pose le tag correspondant :
+
+```bash
+npm version patch   # 0.1.0 -> 0.1.1   (patch | minor | major, ou un numéro exact)
+git push --follow-tags
+```
+
+Il reste à créer la release GitHub sur ce tag :
+
+```bash
+gh release create "v$(node -p "require('./package.json').version")" --generate-notes
+```
+
+Sa publication déclenche le workflow [Build macOS](.github/workflows/release-macos.yml),
+qui construit le dmg et le zip arm64 puis les attache à la release. Le workflow
+refuse de construire si le tag et `package.json` divergent, donc passer par
+`npm version` n'est pas une politesse : c'est ce qui garde les deux d'accord.
+
+Pour vérifier un build sans rien publier, lancer le workflow à la main
+(`gh workflow run release-macos.yml`) : les fichiers sont déposés en artefacts du run.
+
 ## Stack
 
 Electron 39 · electron-vite · React 19 · TypeScript · zustand · sharp (libvips) · vitest
